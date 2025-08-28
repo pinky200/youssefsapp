@@ -24,12 +24,12 @@ jobs:
 
       - name: Build and push frontend image
         run: |
-          docker build -t yossefelnagar/frontapp:latest ./frontend
+          docker build -t yossefelnagar/frontapp:latest ./frontapp
           docker push yossefelnagar/frontapp:latest
 
       - name: Build and push backend image
         run: |
-          docker build -t yossefelnagar/backapp:latest ./backend
+          docker build -t yossefelnagar/backapp:latest ./backapp
           docker push yossefelnagar/backapp:latest
 
   deploy:
