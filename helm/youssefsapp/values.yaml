@@ -1,28 +1,33 @@
-front:
+frontend:
   image:
     repository: frontapp
     tag: local
     pullPolicy: Never
   service:
+    name: frontend-service
     port: 80
   replicas: 1
 
-back:
+backend:
   image:
     repository: backapp
     tag: local
     pullPolicy: Never
   service:
-    port: 3000
+    name: backend-service
+    port: 5000
   replicas: 1
 
 ingress:
   enabled: true
-   host: myapp.local
-  paths:
-    - path: /frontend
-      service: frontend
-      port: 80
-    - path: /backend
-      service: backend
-      port: 5000
+  hosts:
+    - host: myapp.local
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: frontend-service
+              port:
+                number: 80
+

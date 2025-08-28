@@ -6,7 +6,7 @@ metadata:
     {{- include "youssefsapp.labels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
 spec:
-  replicas: {{ .Values.front.replicas }}
+  replicas: {{ .Values.frontend.replicas }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "youssefsapp.name" . }}
@@ -21,20 +21,20 @@ spec:
     spec:
       containers:
         - name: front
-          image: "{{ .Values.front.image.repository }}:{{ .Values.front.image.tag }}"
-          imagePullPolicy: {{ .Values.front.image.pullPolicy }}
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.front.service.port }}
+            - containerPort: {{ .Values.frontend.service.port }}
           readinessProbe:
             httpGet:
               path: /
-              port: {{ .Values.front.service.port }}
+              port: {{ .Values.frontend.service.port }}
             initialDelaySeconds: 2
             periodSeconds: 5
           livenessProbe:
             httpGet:
               path: /
-              port: {{ .Values.front.service.port }}
+              port: {{ .Values.frontend.service.port }}
             initialDelaySeconds: 10
             periodSeconds: 10
 ---
@@ -54,5 +54,5 @@ spec:
   ports:
     - name: http
       port: 80
-      targetPort: {{ .Values.front.service.port }}
+      targetPort: {{ .Values.frontend.service.port }}
 
