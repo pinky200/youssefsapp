@@ -1,6 +1,6 @@
 frontend:
   image:
-    repository: frontapp
+    repository: yossefelnagar/frontapp
     tag: local
     pullPolicy: Never
   service:
@@ -10,7 +10,7 @@ frontend:
 
 backend:
   image:
-    repository: backapp
+    repository: yossefelnagar/backapp
     tag: local
     pullPolicy: Never
   service:
@@ -30,4 +30,6 @@ ingress:
               name: frontend-service
               port:
                 number: 80
+imagePullSecrets:
+  - name: regcred
 

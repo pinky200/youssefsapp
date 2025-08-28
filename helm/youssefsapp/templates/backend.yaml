@@ -2,22 +2,36 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "youssefsapp.fullname" . }}-back
+  labels:
+    {{- include "youssefsapp.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
 spec:
-  replicas: 1
+  replicas: {{ .Values.backend.replicas }}
   selector:
     matchLabels:
-      app: {{ include "youssefsapp.name" . }}-back
+      app.kubernetes.io/name: {{ include "youssefsapp.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: backend
   template:
     metadata:
       labels:
-        app: {{ include "youssefsapp.name" . }}-back
+        app.kubernetes.io/name: {{ include "youssefsapp.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: backend
     spec:
+      imagePullSecrets:
+{{- toYaml .Values.imagePullSecrets | nindent 8 }}
       containers:
         - name: backend
-          image: "backapp:local"
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           ports:
-            - containerPort: 5000
+            - containerPort: {{ .Values.backend.service.port }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.backend.service.port }}
+
 ---
 apiVersion: v1
 kind: Service
