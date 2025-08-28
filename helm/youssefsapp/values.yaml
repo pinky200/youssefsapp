@@ -1,8 +1,8 @@
 frontend:
   image:
     repository: yossefelnagar/frontapp
-    tag: local
-    pullPolicy: Never
+    tag: latest
+    pullPolicy: Always 
   service:
     name: frontend-service
     port: 80
@@ -11,8 +11,8 @@ frontend:
 backend:
   image:
     repository: yossefelnagar/backapp
-    tag: local
-    pullPolicy: Never
+    tag: latest
+    pullPolicy: Always 
   service:
     name: backend-service
     port: 5000
