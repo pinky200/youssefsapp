@@ -9,8 +9,8 @@ jobs:
     runs-on: self-hosted
 
     env:
-      IMAGE_FRONT: youssefelnagar/frontapp:latest
-      IMAGE_BACK: youssefelnagar/backapp:latest
+      IMAGE_FRONT: docker.io/youssefelnagar/frontapp:latest
+      IMAGE_BACK: docker.io/youssefelnagar/backapp:latest
 
     steps:
       - name: Checkout code
