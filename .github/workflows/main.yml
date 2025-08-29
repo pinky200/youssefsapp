@@ -3,49 +3,38 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build-and-deploy:
     runs-on: self-hosted
 
+    env:
+      IMAGE_FRONT: youssefelnagar/frontapp:latest
+      IMAGE_BACK: youssefelnagar/backapp:latest
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Log in to DockerHub
+      # ---- Docker Build & Push ----
+      - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build and push Frontend image
+      - name: Build & Push Frontend
         run: |
-          IMAGE_FRONT=yossefelnagar/frontapp:latest
           docker build -t $IMAGE_FRONT ./frontapp
           docker push $IMAGE_FRONT
 
-      - name: Build and push Backend image
+      - name: Build & Push Backend
         run: |
-          IMAGE_BACK=yossefelnagar/backapp:latest
           docker build -t $IMAGE_BACK ./backapp
           docker push $IMAGE_BACK
 
-      - name: Setup Minikube
-        run: |
-          minikube start --driver=docker --kubernetes-version=v1.33.1
-          kubectl cluster-info
-
-      - name: Setup Helm
-        uses: azure/setup-helm@v4
-        with:
-          version: v3.15.4
-
+      # ---- Helm Deploy ----
       - name: Deploy with Helm
         run: |
           helm upgrade --install youssefsapp ./helm/youssefsapp \
-            --set frontend.image=yossefelnagar/frontapp:latest \
-            --set backend.image=yossefelnagar/backapp:latest
-          
-      - name: Verify Deployment
-        run: |
-          kubectl get pods -A
-          kubectl get svc -A
+            --set frontend.image.repository=youssefelnagar/frontapp \
+            --set frontend.image.tag=latest \
+            --set backend.image.repository=youssefelnagar/backapp \
+            --set backend.image.tag=latest
