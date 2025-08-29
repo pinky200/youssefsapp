@@ -1,43 +1,51 @@
-name: CI/CD with Minikube
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [ "main" ]
-
-env:
-  IMAGE_FRONT: yossefelnagar/frontapp:latest
-  IMAGE_BACK: yossefelnagar/backapp:latest
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build-and-deploy:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Log in to Docker Hub
+      - name: Log in to DockerHub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build frontend image
-        run: docker build -t $IMAGE_FRONT ./frontend
+      - name: Build and push Frontend image
+        run: |
+          IMAGE_FRONT=yossefelnagar/frontapp:latest
+          docker build -t $IMAGE_FRONT ./frontapp
+          docker push $IMAGE_FRONT
 
-      - name: Push frontend image
-        run: docker push $IMAGE_FRONT
+      - name: Build and push Backend image
+        run: |
+          IMAGE_BACK=yossefelnagar/backapp:latest
+          docker build -t $IMAGE_BACK ./backapp
+          docker push $IMAGE_BACK
 
-      - name: Build backend image
-        run: docker build -t $IMAGE_BACK ./backend
+      - name: Setup Minikube
+        run: |
+          minikube start --driver=docker --kubernetes-version=v1.33.1
+          kubectl cluster-info
 
-      - name: Push backend image
-        run: docker push $IMAGE_BACK
-
-      - name: Set kubectl context
-        run: kubectl config use-context minikube
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.4
 
       - name: Deploy with Helm
         run: |
-          helm upgrade --install youssefapp ./helm/youssefsapp \
-            --set frontend.image.repository=yossefelnagar/frontapp \
-            --set frontend.image.tag=latest \
-            --set backend.image.repository=yossefelnagar/backapp \
-            --set backend.image.tag=latest
+          helm upgrade --install youssefsapp ./helm/youssefsapp \
+            --set frontend.image=yossefelnagar/frontapp:latest \
+            --set backend.image=yossefelnagar/backapp:latest
+          
+      - name: Verify Deployment
+        run: |
+          kubectl get pods -A
+          kubectl get svc -A
