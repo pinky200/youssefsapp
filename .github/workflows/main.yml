@@ -1,43 +1,43 @@
-name: CI/CD (Minikube + Docker Hub + Helm)
+name: CI/CD with Minikube
 
 on:
   push:
-    branches: ["main"]
-  workflow_dispatch:
+    branches: [ "main" ]
+
+env:
+  IMAGE_FRONT: yossefelnagar/frontapp:latest
+  IMAGE_BACK: yossefelnagar/backapp:latest
 
 jobs:
   build-and-deploy:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Login to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+      - name: Build frontend image
+        run: docker build -t $IMAGE_FRONT ./frontend
 
-      - name: Build & Push Frontend Image
-        run: |
-          IMAGE_FRONT=${{ secrets.DOCKERHUB_USERNAME }}/frontapp:latest
-          docker build -t $IMAGE_FRONT ./frontapp
-          docker push $IMAGE_FRONT
+      - name: Push frontend image
+        run: docker push $IMAGE_FRONT
 
-      - name: Build & Push Backend Image
-        run: |
-          IMAGE_BACK=${{ secrets.DOCKERHUB_USERNAME }}/backapp:latest
-          docker build -t $IMAGE_BACK ./backapp
-          docker push $IMAGE_BACK
+      - name: Build backend image
+        run: docker build -t $IMAGE_BACK ./backend
 
-      - name: Deploy via Helm
+      - name: Push backend image
+        run: docker push $IMAGE_BACK
+
+      - name: Set kubectl context
+        run: kubectl config use-context minikube
+
+      - name: Deploy with Helm
         run: |
-          helm upgrade --install youssefapp helm/youssefsapp \
-            --set frontend.image.repository=${{ secrets.DOCKERHUB_USERNAME }}/frontapp \
+          helm upgrade --install youssefapp ./helm/youssefsapp \
+            --set frontend.image.repository=yossefelnagar/frontapp \
             --set frontend.image.tag=latest \
-            --set backend.image.repository=${{ secrets.DOCKERHUB_USERNAME }}/backapp \
+            --set backend.image.repository=yossefelnagar/backapp \
             --set backend.image.tag=latest
-
-      - name: Show deployed pods
-        run: |
-          kubectl get pods -o wide
