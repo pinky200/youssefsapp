@@ -4,7 +4,7 @@ frontend:
     tag: latest
     pullPolicy: Always 
   service:
-    name: frontend-service
+    name: youssefsapp-front
     port: 80
   replicas: 1
 
@@ -14,7 +14,7 @@ backend:
     tag: latest
     pullPolicy: Always 
   service:
-    name: backend-service
+    name: youssefsapp-back
     port: 5000
   replicas: 1
 
@@ -27,7 +27,7 @@ ingress:
           pathType: Prefix
           backend:
             service:
-              name: frontend-service
+              name: youssefsapp-front
               port:
                 number: 80
 imagePullSecrets:
