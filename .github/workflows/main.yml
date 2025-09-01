@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted   # 👈 بدل ubuntu-latest
+    runs-on: self-hosted   
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -14,15 +14,15 @@ jobs:
       # Build React + Nginx image
       - name: Build frontend image
         run: |
-          docker build -t youssefsapp-front:${{ github.sha }} ./frontapp
+          docker build -t youssefsapp-front:${{ github.sha }} -f frontapp/Dockerfile .
 
-      # Push image to your registry (لو بتستخدم DockerHub أو أي private registry)
+      # Push image to your registry 
       - name: Push image to DockerHub
         run: |
           docker tag youssefsapp-front:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/youssefsapp-front:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/youssefsapp-front:${{ github.sha }}
 
-      # Deploy using Helm (الـ runner لازم يبقى عنده kubectl + helm + access للـ cluster)
+      # Deploy using Helm
       - name: Helm upgrade/install
         run: |
           helm upgrade --install youssefsapp ./helm/youssefsapp \
