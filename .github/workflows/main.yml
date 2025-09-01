@@ -6,25 +6,23 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted   # 👈 بدل ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # DockerHub login (خلي الـ secrets عندك)
-      - name: Log in to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       # Build React + Nginx image
-      - name: Build and push frontend image
+      - name: Build frontend image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/youssefsapp-front:${{ github.sha }} ./frontapp
+          docker build -t youssefsapp-front:${{ github.sha }} ./frontapp
+
+      # Push image to your registry (لو بتستخدم DockerHub أو أي private registry)
+      - name: Push image to DockerHub
+        run: |
+          docker tag youssefsapp-front:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/youssefsapp-front:${{ github.sha }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/youssefsapp-front:${{ github.sha }}
 
-      # Deploy via Helm
+      # Deploy using Helm (الـ runner لازم يبقى عنده kubectl + helm + access للـ cluster)
       - name: Helm upgrade/install
         run: |
           helm upgrade --install youssefsapp ./helm/youssefsapp \
