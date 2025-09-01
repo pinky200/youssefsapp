@@ -4,27 +4,54 @@ on:
   push:
     branches: [ main ]
 
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-and-deploy:
-    runs-on: self-hosted   
+  build-push-deploy:
+    runs-on: self-hosted
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}   
+      IMAGE_TAG: ${{ github.sha }}
+      FRONT_REPO: ${{ secrets.DOCKER_USERNAME }}/frontapp   
+      BACK_REPO:  ${{ secrets.DOCKER_USERNAME }}/backapp    
+
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # Build React + Nginx image
+      - name: Docker login
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # FRONTEND
       - name: Build frontend image
+        working-directory: ./frontapp
         run: |
-          docker build -t youssefsapp-front:${{ github.sha }} -f frontapp .
+          docker build -t $FRONT_REPO:${IMAGE_TAG} -t $FRONT_REPO:latest .
 
-      # Push image to your registry 
-      - name: Push image to DockerHub
+      - name: Push frontend image
         run: |
-          docker tag youssefsapp-front:${{ github.sha }} ${{ secrets.DOCKERHUB_USERNAME }}/youssefsapp-front:${{ github.sha }}
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/youssefsapp-front:${{ github.sha }}
+          docker push $FRONT_REPO:${IMAGE_TAG}
+          docker push $FRONT_REPO:latest
 
-      # Deploy using Helm
+      # BACKEND
+      - name: Build backend image
+        working-directory: ./backapp
+        run: |
+          docker build -t $BACK_REPO:${IMAGE_TAG} -t $BACK_REPO:latest .
+
+      - name: Push backend image
+        run: |
+          docker push $BACK_REPO:${IMAGE_TAG}
+          docker push $BACK_REPO:latest
+
+      # DEPLOY (Helm upgrade)
       - name: Helm upgrade/install
         run: |
           helm upgrade --install youssefsapp ./helm/youssefsapp \
-            --set frontend.image.repository=${{ secrets.DOCKERHUB_USERNAME }}/youssefsapp-front \
-            --set frontend.image.tag=${{ github.sha }}
+            --set frontend.image.repository=$FRONT_REPO \
+            --set frontend.image.tag=${IMAGE_TAG} \
+            --set backend.image.repository=$BACK_REPO \
+            --set backend.image.tag=${IMAGE_TAG} \
+            --set imagePullSecrets[0].name=regcred
