@@ -1,19 +1,30 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Release.Name }}-ingress
+  name: {{ include "youssefsapp.fullname" . }}-ingress
   labels:
-    app: {{ .Chart.Name }}
+    {{- include "youssefsapp.labels" . | nindent 4 }}
+  annotations:
+    # THIS IS THE CRITICAL ANNOTATION:
+    kubernetes.io/ingress.class: "nginx"
+    # Other useful optional annotations:
+    # nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-    - host: {{ .Values.ingress.host | default "myapp.local" }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ .Values.frontend.service.name }}
-                port:
-                  number: {{ .Values.frontend.service.port }}
-
+  - host: {{ .Values.ingress.host | default "myapp.local" }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "youssefsapp.fullname" . }}-front
+            port:
+              number: 80
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "youssefsapp.fullname" . }}-back
+            port:
+              number: 5000
