@@ -9,12 +9,14 @@ spec:
   replicas: {{ .Values.backend.replicas }}
   selector:
     matchLabels:
+      app: youssefsapp-back
       app.kubernetes.io/name: {{ include "youssefsapp.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/component: backend
   template:
     metadata:
       labels:
+        app: youssefsapp-back
         app.kubernetes.io/name: {{ include "youssefsapp.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: backend
