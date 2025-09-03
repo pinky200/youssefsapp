@@ -1,4 +1,11 @@
 FROM nginx:alpine
-COPY beginner-html-site-styled/ /usr/share/nginx/html/  
+
+# Copy HTML files
+COPY beginner-html-site-styled/ /usr/share/nginx/html/beginner-html-site-styled/
+
+# Copy custom nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]
