@@ -29,7 +29,7 @@ spec:
             - containerPort: {{ .Values.frontend.service.port }}
           readinessProbe:
             httpGet:
-              path: /index.html  # or /health, /, or whatever your app serves
+              path: /  # or /health, /, or whatever your app serves
               port: 80
             initialDelaySeconds: 5  # give it more time to start
             periodSeconds: 5
