@@ -41,10 +41,9 @@ metadata:
   name: {{ include "youssefsapp.fullname" . }}-back
 spec:
   type: NodePort
-  selector:
-    app: {{ include "youssefsapp.name" . }}-back
   ports:
-    - port: 5000
-      targetPort: 5000
-      nodePort: 30081
-
+    - port: {{ .Values.backend.service.port }}  # Service port
+      targetPort: {{ .Values.backend.service.port }}  # Container port
+      # nodePort: 30081  # REMOVE THIS - let Kubernetes auto-assign
+  selector:
+    app: youssefsapp-back  # Make sure this matches your deployment labels
