@@ -7,6 +7,14 @@ frontend:
     name: youssefsapp-front
     port: 80
   replicas: 1
+    # ADD RESOURCES SECTION:
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
 
 backend:
   image:
@@ -17,6 +25,14 @@ backend:
     name: youssefsapp-back
     port: 5000
   replicas: 1
+    # ADD RESOURCES SECTION:
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
 
 ingress:
   enabled: true

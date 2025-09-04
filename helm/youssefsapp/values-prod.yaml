@@ -1,0 +1,28 @@
+# Production environment overrides
+frontend:
+  replicas: 3
+  image:
+    tag: stable  # Use specific tag, not "latest"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "1Gi"
+      cpu: "1"
+
+backend:
+  replicas: 3
+  image:
+    tag: stable  # Use specific tag, not "latest"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "1Gi"
+      cpu: "1"
+
+ingress:
+  hosts:
+    - host: myapp.com  # Real production domain
