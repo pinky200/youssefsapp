@@ -78,15 +78,14 @@ jobs:
 
       - name: Deploy to ${{ steps.env.outputs.ENV }}
         run: |
-          run: |
-            helm upgrade --install ${{ steps.env.outputs.RELEASE_NAME }} ./helm/youssefsapp/ \
-              -n ${{ steps.env.outputs.ENV }} \
-              -f ./helm/youssefsapp/${{ steps.env.outputs.VALUES_FILE }} \
-              --set frontend.image.repository=$FRONT_REPO \
-              --set frontend.image.tag=${IMAGE_TAG} \
-              --set backend.image.repository=$BACK_REPO \
-              --set backend.image.tag=${IMAGE_TAG} \
-              --set imagePullSecrets[0].name=regcred
+          helm upgrade --install youssefsapp ./helm/youssefsapp/ \
+            -n ${{ steps.env.outputs.ENV }} \
+            -f ./helm/youssefsapp/${{ steps.env.outputs.VALUES_FILE }} \
+            --set frontend.image.repository=$FRONT_REPO \
+            --set frontend.image.tag=${IMAGE_TAG} \
+            --set backend.image.repository=$BACK_REPO \
+            --set backend.image.tag=${IMAGE_TAG} \
+            --set imagePullSecrets[0].name=regcred
 
       - name: Verify deployment
         run: |
