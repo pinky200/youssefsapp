@@ -64,29 +64,29 @@ jobs:
           if [ "${{ github.ref }}" == "refs/heads/production" ]; then
             echo "ENV=production" >> $GITHUB_OUTPUT
             echo "VALUES_FILE=values-prod.yaml" >> $GITHUB_OUTPUT
+            echo "RELEASE_NAME=youssefsapp-prod" >> $GITHUB_OUTPUT
           elif [ "${{ github.ref }}" == "refs/heads/staging" ]; then
             echo "ENV=staging" >> $GITHUB_OUTPUT
             echo "VALUES_FILE=values-staging.yaml" >> $GITHUB_OUTPUT
+            echo "RELEASE_NAME=youssefsapp-staging" >> $GITHUB_OUTPUT
           else
             echo "ENV=development" >> $GITHUB_OUTPUT
             echo "VALUES_FILE=values.yaml" >> $GITHUB_OUTPUT
+            echo "RELEASE_NAME=youssefsapp-dev" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create namespace if needed
-        run: |
-          kubectl create namespace ${{ steps.env.outputs.ENV }} --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy to ${{ steps.env.outputs.ENV }}
         run: |
-          helm upgrade --install youssefsapp-staging ./helm/youssefsapp/ -n staging
-            -n ${{ steps.env.outputs.ENV }} \
-            -f ./helm/youssefsapp/${{ steps.env.outputs.VALUES_FILE }} \
-            --set frontend.image.repository=$FRONT_REPO \
-            --set frontend.image.tag=${IMAGE_TAG} \
-            --set backend.image.repository=$BACK_REPO \
-            --set backend.image.tag=${IMAGE_TAG} \
-            --set imagePullSecrets[0].name=regcred \
-            --atomic --timeout 5m0s
+          run: |
+            helm upgrade --install ${{ steps.env.outputs.RELEASE_NAME }} ./helm/youssefsapp/ \
+              -n ${{ steps.env.outputs.ENV }} \
+              -f ./helm/youssefsapp/${{ steps.env.outputs.VALUES_FILE }} \
+              --set frontend.image.repository=$FRONT_REPO \
+              --set frontend.image.tag=${IMAGE_TAG} \
+              --set backend.image.repository=$BACK_REPO \
+              --set backend.image.tag=${IMAGE_TAG} \
+              --set imagePullSecrets[0].name=regcred
 
       - name: Verify deployment
         run: |
