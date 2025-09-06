@@ -1,14 +1,11 @@
-name: CI/CD Pipeline
+name: Deployment Pipeline with Manual Approval
 
 on:
   push:
-    branches: [main, staging, production]
-
-concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+    branches: [main]
 
 jobs:
+  # STAGE 1: Build and push images
   build-push:
     runs-on: self-hosted
     env:
@@ -44,43 +41,69 @@ jobs:
           docker push $BACK_REPO:${IMAGE_TAG}
           docker push $BACK_REPO:latest
 
-  deploy:
+  # STAGE 2: Deploy to Staging (auto)
+  deploy-staging:
     runs-on: self-hosted
     needs: build-push
+    environment: staging
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Determine deployment target
-        id: env
+      - name: Deploy to Staging
         run: |
-          if [ "${{ github.ref }}" == "refs/heads/production" ]; then
-            echo "NAMESPACE=production" >> $GITHUB_OUTPUT
-            echo "VALUES_FILE=values-prod.yaml" >> $GITHUB_OUTPUT
-            echo "RELEASE_NAME=youssefsapp-prod" >> $GITHUB_OUTPUT
-          elif [ "${{ github.ref }}" == "refs/heads/staging" ]; then
-            echo "NAMESPACE=staging" >> $GITHUB_OUTPUT
-            echo "VALUES_FILE=values-staging.yaml" >> $GITHUB_OUTPUT
-            echo "RELEASE_NAME=youssefsapp-staging" >> $GITHUB_OUTPUT
-          else
-            echo "NAMESPACE=default" >> $GITHUB_OUTPUT
-            echo "VALUES_FILE=values.yaml" >> $GITHUB_OUTPUT
-            echo "RELEASE_NAME=youssefsapp" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Deploy to ${{ steps.env.outputs.NAMESPACE }}
-        run: |
-          helm upgrade --install ${{ steps.env.outputs.RELEASE_NAME }} ./helm/youssefsapp/ \
-            -n ${{ steps.env.outputs.NAMESPACE }} \
-            -f ./helm/youssefsapp/${{ steps.env.outputs.VALUES_FILE }} \
+          helm upgrade --install youssefsapp-staging ./helm/youssefsapp/ \
+            -n staging \
+            -f ./helm/youssefsapp/values-staging.yaml \
             --set frontend.image.repository=$FRONT_REPO \
             --set frontend.image.tag=${IMAGE_TAG} \
             --set backend.image.repository=$BACK_REPO \
             --set backend.image.tag=${IMAGE_TAG} \
             --set imagePullSecrets[0].name=regcred
 
-      - name: Verify deployment
+      - name: Verify Staging Deployment
         run: |
-          echo "Deployment to ${{ steps.env.outputs.NAMESPACE }}:"
-          kubectl get all -n ${{ steps.env.outputs.NAMESPACE }}
-          kubectl get ingress -n ${{ steps.env.outputs.NAMESPACE }}
+          echo "Staging deployment completed!"
+          kubectl get all -n staging
+
+  # STAGE 3: Manual Approval for Production
+  request-production-approval:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Wait for Manual Approval
+        run: |
+          echo "✅ Staging deployment successful!"
+          echo "📋 Waiting for manual approval to deploy to production..."
+          echo "👤 Please approve the deployment in the GitHub Environments tab"
+
+  # STAGE 4: Deploy to Production (after manual approval)
+  deploy-production:
+    needs: request-production-approval
+    runs-on: self-hosted
+    environment: production
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Production
+        run: |
+          helm upgrade --install youssefsapp-prod ./helm/youssefsapp/ \
+            -n production \
+            -f ./helm/youssefsapp/values-prod.yaml \
+            --set frontend.image.repository=$FRONT_REPO \
+            --set frontend.image.tag=${IMAGE_TAG} \
+            --set backend.image.repository=$BACK_REPO \
+            --set backend.image.tag=${IMAGE_TAG} \
+            --set imagePullSecrets[0].name=regcred
+
+      - name: Verify Production Deployment
+        run: |
+          echo "🎉 Production deployment completed!"
+          kubectl get all -n production
+          kubectl get ingress -n productionname: Deployment Pipeline with Manual Approval
+
