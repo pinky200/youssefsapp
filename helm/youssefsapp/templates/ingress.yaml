@@ -12,13 +12,18 @@ spec:
   - host: {{ .host | quote }}
     http:
       paths:
-      {{- range .paths }}
-      - path: {{ .path }}
+      - path: {{ .path | default "/" }}
         pathType: {{ .pathType | default "Prefix" }}
         backend:
           service:
-            name: {{ .backend.service.name }}
+            name: {{ .backend.service.name | default (include "youssefsapp.fullname" .) }}-front
             port:
-              number: {{ .backend.service.port.number }}
-      {{- end }}
+              number: {{ .backend.service.port.number | default 80 }}
+      - path: {{ .apiPath | default "/api" }}
+        pathType: {{ .apiPathType | default "Prefix" }}
+        backend:
+          service:
+            name: {{ .backend.service.name | default (include "youssefsapp.fullname" .) }}-back
+            port:
+              number: {{ .backend.service.port.number | default 5000 }}
   {{- end }}

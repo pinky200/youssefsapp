@@ -21,4 +21,6 @@ backend:
 
 ingress:
   hosts:
-    - host: staging.myapp.local  # Different host for staging
+    - host: staging.myapp.local
+      path: /
+      apiPath: /api

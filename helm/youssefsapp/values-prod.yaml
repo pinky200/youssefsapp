@@ -25,4 +25,6 @@ backend:
 
 ingress:
   hosts:
-    - host: myapp.com  # Real production domain
+    - host: myapp.com
+      path: /
+      apiPath: /api
