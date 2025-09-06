@@ -11,56 +11,47 @@ jobs:
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       IMAGE_TAG: ${{ github.sha }}
-      FRONT_REPO: ${{ secrets.DOCKER_USERNAME }}/frontapp
-      BACK_REPO: ${{ secrets.DOCKER_USERNAME }}/backapp
-
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Docker login
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
-      - name: Build frontend image
+      - name: Build and push frontend
         working-directory: ./frontapp
         run: |
-          docker build -t $FRONT_REPO:${IMAGE_TAG} -t $FRONT_REPO:latest .
+          docker build -t $DOCKERHUB_USERNAME/frontapp:$IMAGE_TAG -t $DOCKERHUB_USERNAME/frontapp:latest .
+          docker push $DOCKERHUB_USERNAME/frontapp:$IMAGE_TAG
+          docker push $DOCKERHUB_USERNAME/frontapp:latest
 
-      - name: Push frontend image
-        run: |
-          docker push $FRONT_REPO:${IMAGE_TAG}
-          docker push $FRONT_REPO:latest
-
-      - name: Build backend image
+      - name: Build and push backend
         working-directory: ./backapp
         run: |
-          docker build -t $BACK_REPO:${IMAGE_TAG} -t $BACK_REPO:latest .
-
-      - name: Push backend image
-        run: |
-          docker push $BACK_REPO:${IMAGE_TAG}
-          docker push $BACK_REPO:latest
+          docker build -t $DOCKERHUB_USERNAME/backapp:$IMAGE_TAG -t $DOCKERHUB_USERNAME/backapp:latest .
+          docker push $DOCKERHUB_USERNAME/backapp:$IMAGE_TAG
+          docker push $DOCKERHUB_USERNAME/backapp:latest
 
   # STAGE 2: Deploy to Staging (auto)
   deploy-staging:
     runs-on: self-hosted
     needs: build-push
     environment: staging
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      IMAGE_TAG: ${{ github.sha }}
     
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Deploy to Staging
         run: |
           helm upgrade --install youssefsapp-staging ./helm/youssefsapp/ \
             -n staging \
             -f ./helm/youssefsapp/values-staging.yaml \
-            --set frontend.image.repository=$FRONT_REPO \
-            --set frontend.image.tag=${IMAGE_TAG} \
-            --set backend.image.repository=$BACK_REPO \
-            --set backend.image.tag=${IMAGE_TAG} \
-            --set imagePullSecrets[0].name=regcred
+            --set frontend.image.repository=$DOCKERHUB_USERNAME/frontapp \
+            --set frontend.image.tag=$IMAGE_TAG \
+            --set backend.image.repository=$DOCKERHUB_USERNAME/backapp \
+            --set backend.image.tag=$IMAGE_TAG
 
       - name: Verify Staging Deployment
         run: |
@@ -78,32 +69,28 @@ jobs:
         run: |
           echo "✅ Staging deployment successful!"
           echo "📋 Waiting for manual approval to deploy to production..."
-          echo "👤 Please approve the deployment in the GitHub Environments tab"
 
   # STAGE 4: Deploy to Production (after manual approval)
   deploy-production:
     needs: request-production-approval
     runs-on: self-hosted
     environment: production
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      IMAGE_TAG: ${{ github.sha }}
     
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Deploy to Production
         run: |
           helm upgrade --install youssefsapp-prod ./helm/youssefsapp/ \
             -n production \
             -f ./helm/youssefsapp/values-prod.yaml \
-            --set frontend.image.repository=$FRONT_REPO \
-            --set frontend.image.tag=${IMAGE_TAG} \
-            --set backend.image.repository=$BACK_REPO \
-            --set backend.image.tag=${IMAGE_TAG} \
-            --set imagePullSecrets[0].name=regcred
+            --set frontend.image.repository=$DOCKERHUB_USERNAME/frontapp \
+            --set frontend.image.tag=$IMAGE_TAG \
+            --set backend.image.repository=$DOCKERHUB_USERNAME/backapp \
+            --set backend.image.tag=$IMAGE_TAG
 
       - name: Verify Production Deployment
         run: |
           echo "🎉 Production deployment completed!"
           kubectl get all -n production
-          kubectl get ingress -n productionname: Deployment Pipeline with Manual Approval
-
