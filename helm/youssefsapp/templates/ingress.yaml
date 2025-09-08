@@ -24,4 +24,4 @@ spec:
           service:
             name: {{ include "youssefsapp.fullname" . }}-back
             port:
-              number: 5000
+              number: {{ .Values.backend.service.port }}
