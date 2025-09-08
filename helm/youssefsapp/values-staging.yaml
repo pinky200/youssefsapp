@@ -22,5 +22,8 @@ backend:
 ingress:
   hosts:
     - host: staging.myapp.local
-      path: /
-      apiPath: /api
+      paths:
+        - path: /
+          pathType: Prefix
+        - path: /api
+          pathType: Prefix

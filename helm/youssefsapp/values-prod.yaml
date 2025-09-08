@@ -26,5 +26,8 @@ backend:
 ingress:
   hosts:
     - host: myapp.com
-      path: /
-      apiPath: /api
+      paths:
+        - path: /
+          pathType: Prefix
+        - path: /api
+          pathType: Prefix
