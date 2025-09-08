@@ -46,4 +46,6 @@ spec:
       targetPort: {{ .Values.backend.service.port }}  # Container port
       # nodePort: 30081  # REMOVE THIS - let Kubernetes auto-assign
   selector:
-    app: youssefsapp-back  # Make sure this matches your deployment labels
+    app: youssefsapp-back  
+    app.kubernetes.io/name: {{ include "youssefsapp.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
