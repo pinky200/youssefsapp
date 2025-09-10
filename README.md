@@ -63,6 +63,9 @@ GitHub Runner (configured on WSL2)
 │   └── beginner-html-site-styled/
 └── README.md
 
+<img width="1366" height="768" alt="kubectl" src="https://github.com/user-attachments/assets/bf00802f-860e-4caf-ad4f-f5f77d95d4fe" />
+
+
 🔄 CI/CD Pipeline
 The GitHub Actions workflow provides:
 Build Stage: Docker image building and vulnerability scanning
