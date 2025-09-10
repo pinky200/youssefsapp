@@ -76,6 +76,10 @@ Vulnerability scanning with Trivy
 Environment-specific configurations
 Rolling deployments with health checks
 
+<img width="971" height="344" alt="cicd run" src="https://github.com/user-attachments/assets/59d73025-74cc-4c15-abcd-9d0f010d4646" />
+
+
+
 🎓 Learning Journey
 This project was built to master:
 Kubernetes architecture and operations
